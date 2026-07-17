@@ -4,6 +4,18 @@
 
 ![Plateforme](https://img.shields.io/badge/plateforme-Windows%2010%2F11-0c447c) ![.NET](https://img.shields.io/badge/.NET-8-512bd4) ![Licence](https://img.shields.io/badge/licence-GPLv3-791f1f)
 
+## Téléchargement
+
+Deux livrables sont publiés dans les [Releases](../../releases) :
+
+- **Installeur** (`MdEditor-Setup-x.y.z.exe`, ~3 Mo) — recommandé. Assistant d'installation
+  classique : installation par-utilisateur sans droits administrateur, raccourcis menu Démarrer,
+  désinstalleur propre, et **vérification automatique des prérequis** (runtime .NET 8 Desktop et
+  runtime WebView2, téléchargés et installés silencieusement s'ils sont absents).
+- **Exécutable autonome** (`MdEditor.exe`, ~70 Mo) — un seul fichier self-contained, runtime .NET
+  embarqué, exécutable sans installation. Nécessite tout de même le runtime **WebView2** pour
+  l'aperçu (préinstallé sur Windows 11 et les Windows 10 à jour).
+
 ## Fonctionnalités
 
 ### Édition et aperçu
@@ -57,9 +69,74 @@ Annuler (Ctrl+Z) · Rétablir (Ctrl+Y) · Couper (Ctrl+X) · Copier (Ctrl+C) · 
 Bascule accessible depuis la barre de titre, mode clair actif par défaut. La préférence est conservée entre les sessions, et s'applique à l'ensemble de l'interface, y compris l'aperçu Markdown.
 
 
+## Build
+
+Le SDK .NET 8 doit être installé.
+
+Compiler et lancer en développement :
+
+```powershell
+dotnet build MdEditor\MdEditor.csproj
+dotnet run --project MdEditor
+```
+
+Exécutable autonome self-contained (un seul `.exe`, runtime .NET embarqué) :
+
+```powershell
+dotnet publish MdEditor\MdEditor.csproj -c Release -r win-x64 `
+  --self-contained true -p:PublishSingleFile=true `
+  -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+  -o publish\self-contained
+```
+
+`IncludeNativeLibrariesForSelfExtract` est nécessaire : sans lui, les bibliothèques natives de WPF
+(`wpfgfx_cor3.dll`, `PresentationNative_cor3.dll`…) restent à côté de l'exe au lieu d'être
+embarquées, et le livrable n'est plus un fichier unique.
+
+Version framework-dépendante (légère, requiert le runtime .NET 8 Desktop sur la machine cible —
+c'est celle qu'empaquette l'installeur) :
+
+```powershell
+dotnet publish MdEditor\MdEditor.csproj -c Release -r win-x64 `
+  --self-contained false -p:PublishSingleFile=true `
+  -p:EnableCompressionInSingleFile=false `
+  -o publish\framework-dependent
+```
+
+`-p:EnableCompressionInSingleFile=false` est obligatoire en framework-dépendant : la compression
+single-file n'est valide qu'en self-contained (sinon erreur `NETSDK1176`).
+
+### Installeur
+
+Le script Inno Setup `installer/MdEditor.iss` produit le `Setup.exe` à partir de la build
+framework-dépendante ci-dessus (à générer en premier) :
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe" installer\MdEditor.iss
+```
+
+Le résultat est écrit dans `installer\Output\`.
+
+## Architecture
+
+.NET 8 WPF, MVVM (CommunityToolkit.Mvvm). Le panneau d'édition est un `TextEditor` AvalonEdit, le
+panneau d'aperçu un contrôle WebView2 alimenté par du HTML généré via Markdig — les deux sont
+partagés et re-pointés sur l'onglet actif plutôt que dupliqués par onglet.
+
+- `Models/` — `AppSettings` (`%AppData%\MdEditor\settings.json`), `SessionManifest`
+  (`%TEMP%\MdEditor\session.json`)
+- `Services/` — rendu Markdown, recherche, thème, réglages, session et autosave
+  (`%TEMP%\MdEditor\autosave\`)
+- `ViewModels/` — `MainViewModel`, `DocumentTabViewModel`, `FindReplaceViewModel`
+- `Views/` — fenêtres À propos et Rechercher/Remplacer
+- `Themes/` — dictionnaires de ressources clair / sombre
+
+La synchronisation du défilement et de la sélection entre les deux panneaux passe par un contrat
+JS↔host (`window.__md.*` côté page, `WebMessageReceived` / `ExecuteScriptAsync` côté application).
+
 ## À propos de MD Editor
 
-**Version 1.0**
+**Version 1.2**
 
 Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier au titre des clauses de la Licence Publique Générale GNU, telle que publiée par la Free Software Foundation ; soit la version 3 de la Licence, ou (à votre discrétion) une version ultérieure quelconque.
 

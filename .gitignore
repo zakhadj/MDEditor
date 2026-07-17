@@ -16,6 +16,8 @@ bld/
 # Publish output
 publish/
 [Pp]ublish[Oo]utput/
+# Installeur compile (livre via les Releases GitHub, jamais versionne)
+installer/Output/
 *.publishsettings
 *_i.c
 *_p.c
