@@ -73,6 +73,18 @@ Deux livrables sont publiés dans les [Releases](https://github.com/zakhadj/MDEd
 
 Le SDK .NET 8 doit être installé.
 
+### Changer la version
+
+La version est définie à un seul endroit : la propriété `<Version>` de `MdEditor/MdEditor.csproj`.
+L'écran « À propos » la lit à l'exécution depuis l'assembly, et le script de l'installeur la lit à la
+compilation depuis le `ProductVersion` de l'exe publié. Il n'y a donc rien d'autre à modifier — mais
+l'exe doit être republié **avant** de recompiler l'installeur, sinon le `Setup.exe` portera l'ancienne
+version.
+
+`IncludeSourceRevisionInInformationalVersion` est mis à `false` dans le csproj : sans cela le SDK
+.NET 8 suffixe la version du SHA du commit (`1.2.1+ece4192…`), qui se retrouverait affiché dans
+l'application et dans le nom du fichier d'installation.
+
 Compiler et lancer en développement :
 
 ```powershell
@@ -136,7 +148,8 @@ JS↔host (`window.__md.*` côté page, `WebMessageReceived` / `ExecuteScriptAsy
 
 ## À propos de MD Editor
 
-**Version 1.2.1**
+La version installée est affichée dans l'écran « À propos » de l'application (menu `?`). La dernière
+version publiée est celle en tête des [Releases](https://github.com/zakhadj/MDEditor/releases).
 
 Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier au titre des clauses de la Licence Publique Générale GNU, telle que publiée par la Free Software Foundation ; soit la version 3 de la Licence, ou (à votre discrétion) une version ultérieure quelconque.
 

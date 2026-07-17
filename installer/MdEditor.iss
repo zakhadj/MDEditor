@@ -9,9 +9,13 @@
 ;                                  -p:EnableCompressionInSingleFile=false)
 
 #define AppName "MD Editor"
-#define AppVersion "1.2.1"
 #define AppPublisher "Zakaria Hadj"
 #define AppExeName "MdEditor.exe"
+#define AppExeSource "..\publish\framework-dependent\" + AppExeName
+; La version n'est PAS ecrite ici : elle est lue dans le ProductVersion de l'exe publie, lui-meme
+; issu de <Version> dans MdEditor.csproj (source de verite unique). Compiler ce script sans avoir
+; republie l'exe produirait donc un Setup portant l'ancienne version.
+#define AppVersion GetStringFileInfo(AppExeSource, "ProductVersion")
 ; URL evergreen officiel Microsoft vers le dernier runtime .NET 8 Desktop x64
 #define DotNetRuntimeUrl "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe"
 ; Bootstrapper evergreen officiel Microsoft du runtime WebView2
@@ -52,7 +56,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\publish\framework-dependent\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#AppExeSource}"; DestDir: "{app}"; Flags: ignoreversion
 ; WebView2Loader.dll est natif : il reste hors du single-file et doit accompagner l'exe.
 Source: "..\publish\framework-dependent\*"; DestDir: "{app}"; Excludes: "{#AppExeName},*.pdb,*.xml"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
 
