@@ -18,7 +18,10 @@
 
   <ItemGroup>
     <Resource Include="Resources\MD-Editor-Icon.png" />
-    <Content Include="README.md">
+    <!-- README unique a la racine du depot : sert de page GitHub et d'onglet d'accueil au premier
+         lancement (App.TryOpenReadme le lit depuis AppContext.BaseDirectory). Link force le nom du
+         fichier copie, sinon un Content hors du dossier projet ne se retrouve pas a plat. -->
+    <Content Include="..\README.md" Link="README.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -4,18 +4,6 @@
 
 ![Plateforme](https://img.shields.io/badge/plateforme-Windows%2010%2F11-0c447c) ![.NET](https://img.shields.io/badge/.NET-8-512bd4) ![Licence](https://img.shields.io/badge/licence-GPLv3-791f1f)
 
-## Téléchargement
-
-Deux livrables sont publiés dans les [Releases](../../releases) :
-
-- **Installeur** (`MdEditor-Setup-x.y.z.exe`, ~3 Mo) — recommandé. Assistant d'installation
-  classique : installation par-utilisateur sans droits administrateur, raccourcis menu Démarrer,
-  désinstalleur propre, et **vérification automatique des prérequis** (runtime .NET 8 Desktop et
-  runtime WebView2, téléchargés et installés silencieusement s'ils sont absents).
-- **Exécutable autonome** (`MdEditor.exe`, ~70 Mo) — un seul fichier self-contained, runtime .NET
-  embarqué, exécutable sans installation. Nécessite tout de même le runtime **WebView2** pour
-  l'aperçu (préinstallé sur Windows 11 et les Windows 10 à jour).
-
 ## Fonctionnalités
 
 ### Édition et aperçu
@@ -68,6 +56,18 @@ Annuler (Ctrl+Z) · Rétablir (Ctrl+Y) · Couper (Ctrl+X) · Copier (Ctrl+C) · 
 ### Thème clair / sombre
 Bascule accessible depuis la barre de titre, mode clair actif par défaut. La préférence est conservée entre les sessions, et s'applique à l'ensemble de l'interface, y compris l'aperçu Markdown.
 
+
+## Téléchargement
+
+Deux livrables sont publiés dans les [Releases](https://github.com/zakhadj/MDEditor/releases) :
+
+- **Installeur** (`MdEditor-Setup-x.y.z.exe`, ~3 Mo) — recommandé. Assistant d'installation
+  classique : installation par-utilisateur sans droits administrateur, raccourcis menu Démarrer,
+  désinstalleur propre, et **vérification automatique des prérequis** (runtime .NET 8 Desktop et
+  runtime WebView2, téléchargés et installés silencieusement s'ils sont absents).
+- **Exécutable autonome** (`MdEditor.exe`, ~70 Mo) — un seul fichier self-contained, runtime .NET
+  embarqué, exécutable sans installation. Nécessite tout de même le runtime **WebView2** pour
+  l'aperçu (préinstallé sur Windows 11 et les Windows 10 à jour).
 
 ## Build
 
