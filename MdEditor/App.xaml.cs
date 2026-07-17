@@ -214,24 +214,54 @@ public partial class App : Application
         vm.NewUntitledTab();
     }
 
+    private const string ReadmeResourceName = "MdEditor.README.md";
+
     private static bool TryOpenReadme(MainViewModel vm)
+    {
+        var content = ReadEmbeddedReadme() ?? ReadAdjacentReadme();
+        if (content == null)
+        {
+            return false;
+        }
+
+        vm.CreateTab("README.md", null, content, false);
+        return true;
+    }
+
+    // Source primaire : le README embarque dans l'assembly. Un publish single-file ne bundle pas les
+    // fichiers Content, donc l'exe autonome est distribue seul et n'a aucun README voisin a lire.
+    private static string? ReadEmbeddedReadme()
+    {
+        try
+        {
+            using var stream = typeof(App).Assembly.GetManifestResourceStream(ReadmeResourceName);
+            if (stream == null)
+            {
+                return null;
+            }
+
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // Repli si la ressource manque : le README pose a cote de l'exe par l'installeur.
+    private static string? ReadAdjacentReadme()
     {
         try
         {
             var readmePath = Path.Combine(AppContext.BaseDirectory, "README.md");
-            if (File.Exists(readmePath))
-            {
-                var content = File.ReadAllText(readmePath);
-                vm.CreateTab("README.md", null, content, false);
-                return true;
-            }
+            return File.Exists(readmePath) ? File.ReadAllText(readmePath) : null;
         }
         catch
         {
-            // Fall back to the default empty tab if the bundled README can't be read.
+            // Retombe sur l'onglet vide par defaut si le README est illisible.
+            return null;
         }
-
-        return false;
     }
 
     private static bool ComputeIsDirty(SessionTabEntry entry, string autosaveContent)

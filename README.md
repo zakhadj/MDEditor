@@ -136,7 +136,7 @@ JS↔host (`window.__md.*` côté page, `WebMessageReceived` / `ExecuteScriptAsy
 
 ## À propos de MD Editor
 
-**Version 1.2**
+**Version 1.2.1**
 
 Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier au titre des clauses de la Licence Publique Générale GNU, telle que publiée par la Free Software Foundation ; soit la version 3 de la Licence, ou (à votre discrétion) une version ultérieure quelconque.
 

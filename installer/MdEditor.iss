@@ -9,7 +9,7 @@
 ;                                  -p:EnableCompressionInSingleFile=false)
 
 #define AppName "MD Editor"
-#define AppVersion "1.2.0"
+#define AppVersion "1.2.1"
 #define AppPublisher "Zakaria Hadj"
 #define AppExeName "MdEditor.exe"
 ; URL evergreen officiel Microsoft vers le dernier runtime .NET 8 Desktop x64

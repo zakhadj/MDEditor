@@ -19,8 +19,12 @@
   <ItemGroup>
     <Resource Include="Resources\MD-Editor-Icon.png" />
     <!-- README unique a la racine du depot : sert de page GitHub et d'onglet d'accueil au premier
-         lancement (App.TryOpenReadme le lit depuis AppContext.BaseDirectory). Link force le nom du
-         fichier copie, sinon un Content hors du dossier projet ne se retrouve pas a plat. -->
+         lancement. Embarque en ressource car un publish single-file ne bundle pas les Content : le
+         livrable autonome est distribue comme un exe seul, sans fichier voisin a lire. -->
+    <EmbeddedResource Include="..\README.md" Link="README.md" LogicalName="MdEditor.README.md" />
+    <!-- Copie voisine conservee : l'installeur la livre comme documentation lisible a cote de l'app,
+         et App.TryOpenReadme s'en sert de repli. Link force le nom a plat, sinon un item hors du
+         dossier projet ne s'y retrouve pas. -->
     <Content Include="..\README.md" Link="README.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
