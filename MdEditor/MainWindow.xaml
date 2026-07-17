@@ -1,0 +1,300 @@
+<Window x:Class="MdEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ae="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:vm="clr-namespace:MdEditor.ViewModels"
+        Title="MD Editor"
+        Icon="Resources/MD-Editor-Icon.png"
+        Width="1180" Height="760" MinWidth="720" MinHeight="460"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource BackgroundPrimaryBrush}"
+        FontFamily="{StaticResource SansFontFamily}"
+        AllowDrop="True"
+        PreviewKeyDown="Window_PreviewKeyDown"
+        DragEnter="Window_DragEnter"
+        DragOver="Window_DragOver"
+        DragLeave="Window_DragLeave"
+        Drop="Window_Drop"
+        Closing="Window_Closing"
+        StateChanged="Window_StateChanged"
+        Activated="Window_Activated"
+        Deactivated="Window_Deactivated">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="42" ResizeBorderThickness="6" GlassFrameThickness="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+
+    <Border BorderBrush="{DynamicResource BorderSecondaryBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- ============ Title bar ============ -->
+            <Grid Grid.Row="0" Height="42" Background="{DynamicResource BackgroundSecondaryBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Image Grid.Column="0" Width="18" Height="18" Margin="14,0,0,0" Source="Resources/MD-Editor-Icon.png" />
+                <TextBlock x:Name="TitleText" Grid.Column="1" Text="MD Editor" Margin="8,0,0,0" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+
+                <Button Grid.Column="3" x:Name="ThemeToggleButton" Style="{StaticResource IconButtonStyle}"
+                        Click="ThemeToggleButton_Click"
+                        WindowChrome.IsHitTestVisibleInChrome="True" ToolTip="Basculer le thème clair/sombre">
+                    <Grid Width="14" Height="14">
+                        <Canvas x:Name="SunIcon" Width="14" Height="14">
+                            <Ellipse Canvas.Left="4" Canvas.Top="4" Width="6" Height="6" Fill="{DynamicResource TextPrimaryBrush}" />
+                            <Line X1="7" Y1="0" X2="7" Y2="1.8" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.3" />
+                            <Line X1="7" Y1="12.2" X2="7" Y2="14" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.3" />
+                            <Line X1="0" Y1="7" X2="1.8" Y2="7" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.3" />
+                            <Line X1="12.2" Y1="7" X2="14" Y2="7" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.3" />
+                            <Line X1="2.1" Y1="2.1" X2="3.3" Y2="3.3" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.3" />
+                            <Line X1="10.7" Y1="10.7" X2="11.9" Y2="11.9" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.3" />
+                            <Line X1="11.9" Y1="2.1" X2="10.7" Y2="3.3" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.3" />
+                            <Line X1="2.1" Y1="11.9" X2="3.3" Y2="10.7" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.3" />
+                        </Canvas>
+                        <Path x:Name="MoonIcon" Visibility="Collapsed" Fill="{DynamicResource TextPrimaryBrush}">
+                            <Path.Data>
+                                <CombinedGeometry GeometryCombineMode="Exclude">
+                                    <CombinedGeometry.Geometry1>
+                                        <EllipseGeometry Center="7,7" RadiusX="6" RadiusY="6" />
+                                    </CombinedGeometry.Geometry1>
+                                    <CombinedGeometry.Geometry2>
+                                        <EllipseGeometry Center="10,5" RadiusX="5" RadiusY="5" />
+                                    </CombinedGeometry.Geometry2>
+                                </CombinedGeometry>
+                            </Path.Data>
+                        </Path>
+                    </Grid>
+                </Button>
+
+                <Button Grid.Column="4" Style="{StaticResource IconButtonStyle}" Click="MinimizeButton_Click"
+                        WindowChrome.IsHitTestVisibleInChrome="True" ToolTip="Réduire">
+                    <Border Width="10" Height="1" Background="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                </Button>
+
+                <Button Grid.Column="5" Style="{StaticResource IconButtonStyle}" Click="MaximizeRestoreButton_Click"
+                        WindowChrome.IsHitTestVisibleInChrome="True" ToolTip="Agrandir">
+                    <Grid Width="10" Height="10">
+                        <Rectangle x:Name="MaximizeGlyph" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1" />
+                        <Grid x:Name="RestoreGlyph" Visibility="Collapsed">
+                            <Rectangle Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1"
+                                       Width="8" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top" />
+                            <Rectangle Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1"
+                                       Width="8" Height="8" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                                       Fill="{DynamicResource BackgroundPrimaryBrush}" />
+                        </Grid>
+                    </Grid>
+                </Button>
+
+                <Button Grid.Column="6" Style="{StaticResource CloseButtonStyle}" Width="44" Height="42" Click="CloseButton_Click"
+                        WindowChrome.IsHitTestVisibleInChrome="True" ToolTip="Fermer">
+                    <Grid Width="10" Height="10">
+                        <Line X1="0" Y1="0" X2="10" Y2="10" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1" />
+                        <Line X1="0" Y1="10" X2="10" Y2="0" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1" />
+                    </Grid>
+                </Button>
+            </Grid>
+
+            <!-- ============ Menu bar ============ -->
+            <Menu x:Name="TopMenu" Grid.Row="1" Padding="10,4" BorderBrush="{DynamicResource BorderTertiaryBrush}" BorderThickness="0,1,0,1">
+                <MenuItem Header="Fichier" SubmenuOpened="FileMenu_SubmenuOpened" x:Name="FileMenuItem">
+                    <MenuItem Header="Nouveau" InputGestureText="Ctrl+N" Command="{Binding NewTabCommand}" />
+                    <MenuItem Header="Ouvrir" InputGestureText="Ctrl+O" Click="OpenMenuItem_Click" />
+                    <MenuItem Header="Sauvegarder" InputGestureText="Ctrl+S" Click="SaveMenuItem_Click" />
+                    <MenuItem Header="Sauvegarder sous..." InputGestureText="Ctrl+Shift+S" Click="SaveAsMenuItem_Click" />
+                    <Separator />
+                    <MenuItem Header="Fermer" InputGestureText="Ctrl+W" Click="CloseTabMenuItem_Click" />
+                    <MenuItem Header="Fermer tous les onglets" Click="CloseAllTabsMenuItem_Click" />
+                    <MenuItem Header="Imprimer" Click="PrintMenuItem_Click" />
+                    <Separator />
+                    <MenuItem x:Name="RecentFilesHeader" Header="Fichiers récents" IsEnabled="False" FontSize="11" />
+                </MenuItem>
+                <MenuItem Header="Edition">
+                    <MenuItem Header="Annuler" InputGestureText="Ctrl+Z" Click="UndoMenuItem_Click" />
+                    <MenuItem Header="Rétablir" InputGestureText="Ctrl+Y" Click="RedoMenuItem_Click" />
+                    <Separator />
+                    <MenuItem Header="Couper" InputGestureText="Ctrl+X" Click="CutMenuItem_Click"
+                               IsEnabled="{Binding IsRawEditorFocused}" />
+                    <MenuItem Header="Copier" InputGestureText="Ctrl+C" Click="CopyMenuItem_Click" />
+                    <MenuItem Header="Coller" InputGestureText="Ctrl+V" Click="PasteMenuItem_Click" />
+                    <MenuItem Header="Tout sélectionner" InputGestureText="Ctrl+A" Click="SelectAllMenuItem_Click" />
+                </MenuItem>
+                <MenuItem Header="Recherche">
+                    <MenuItem Header="Chercher" InputGestureText="Ctrl+F" Click="FindMenuItem_Click" />
+                    <MenuItem Header="Remplacer" InputGestureText="Ctrl+H" Click="ReplaceMenuItem_Click" />
+                </MenuItem>
+                <MenuItem Header="?">
+                    <MenuItem Header="A propos de MD Editor" Click="AboutMenuItem_Click" />
+                </MenuItem>
+            </Menu>
+
+            <!-- ============ Formatting toolbar ============ -->
+            <WrapPanel Grid.Row="2" Margin="8,8,8,0">
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertH1_Click" ToolTip="Titre 1">H1</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertH2_Click" ToolTip="Titre 2">H2</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertH3_Click" ToolTip="Titre 3">H3</Button>
+                <Border Width="1" Margin="4,4" Background="{DynamicResource BorderTertiaryBrush}" />
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertBold_Click" ToolTip="Gras" FontWeight="Bold">B</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertItalic_Click" ToolTip="Italique" FontStyle="Italic">I</Button>
+                <Border Width="1" Margin="4,4" Background="{DynamicResource BorderTertiaryBrush}" />
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertBulletList_Click" ToolTip="Liste à puces">Liste</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertNumberedList_Click" ToolTip="Liste numérotée">1. Liste</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertLink_Click" ToolTip="Lien">Lien</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertImage_Click" ToolTip="Image">Image</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertCodeBlock_Click" ToolTip="Bloc de code">Code</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertQuote_Click" ToolTip="Citation">Citation</Button>
+                <Button Style="{StaticResource ToolbarButtonStyle}" Click="InsertTable_Click" ToolTip="Tableau">Tableau</Button>
+            </WrapPanel>
+
+            <!-- ============ Separator ============ -->
+            <Border Grid.Row="3" Height="1" Margin="8,8,8,0" Background="{DynamicResource BorderTertiaryBrush}" />
+
+            <!-- ============ Tab strip ============ -->
+            <ScrollViewer Grid.Row="4" Margin="8,8,8,0"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal">
+                    <ListBox x:Name="TabStrip" Style="{StaticResource TabStripStyle}"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                              ItemContainerStyle="{StaticResource TabStripItemStyle}"
+                              ItemsSource="{Binding Tabs}" SelectedItem="{Binding ActiveTab}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:DocumentTabViewModel}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontSize="13" />
+                                    <Ellipse Width="6" Height="6" Margin="6,0,0,0" VerticalAlignment="Center"
+                                             Fill="{DynamicResource TextInfoBrush}"
+                                             Visibility="{Binding IsDirty, Converter={StaticResource BoolToVis}}" />
+                                    <Button Style="{StaticResource TabCloseButtonStyle}" Margin="6,0,0,0" Click="TabClose_Click"
+                                            Tag="{Binding}" ToolTip="Fermer l'onglet">
+                                        <Grid Width="8" Height="8">
+                                            <Line X1="0" Y1="0" X2="8" Y2="8" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1" />
+                                            <Line X1="0" Y1="8" X2="8" Y2="0" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1" />
+                                        </Grid>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button Style="{StaticResource IconButtonStyle}" Width="32" Click="NewTabButton_Click"
+                            ToolTip="Nouvel onglet" VerticalAlignment="Center">
+                        <Grid Width="11" Height="11">
+                            <Line X1="5.5" Y1="0" X2="5.5" Y2="11" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4" />
+                            <Line X1="0" Y1="5.5" X2="11" Y2="5.5" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4" />
+                        </Grid>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ============ Tab/editor separator ============ -->
+            <Border Grid.Row="5" Height="1" Margin="8,8,8,0" Background="{DynamicResource BorderTertiaryBrush}" />
+
+            <!-- ============ Drop error banner ============ -->
+            <Border Grid.Row="6" x:Name="DropErrorBanner" Visibility="Collapsed" Margin="8,8,8,0" Padding="10,8"
+                    Background="{DynamicResource BackgroundDangerBrush}" CornerRadius="{StaticResource RadiusMd}">
+                <TextBlock Text="Formats supportés : .txt et .MD" Foreground="{DynamicResource TextDangerBrush}" FontSize="13" />
+            </Border>
+
+            <!-- ============ Editor area ============ -->
+            <Grid Grid.Row="7" Margin="8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="120" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" MinWidth="120" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="{DynamicResource BackgroundPrimaryBrush}">
+                        <ae:TextEditor x:Name="RawEditor" Document="{Binding ActiveTab.Document}"
+                                       FontFamily="{StaticResource MonoFontFamily}" FontSize="13"
+                                       Background="Transparent" Foreground="{DynamicResource TextPrimaryBrush}"
+                                       Padding="14" ShowLineNumbers="False"
+                                       GotFocus="RawEditor_GotFocus" LostFocus="RawEditor_LostFocus">
+                            <ae:TextEditor.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Couper" Click="RawContextCut_Click" />
+                                    <MenuItem Header="Copier" Click="RawContextCopy_Click" />
+                                    <MenuItem Header="Coller" Click="RawContextPaste_Click" />
+                                    <MenuItem Header="Tout sélectionner" Click="RawContextSelectAll_Click" />
+                                </ContextMenu>
+                            </ae:TextEditor.ContextMenu>
+                        </ae:TextEditor>
+                    </Border>
+
+                    <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                  Background="Transparent" ResizeBehavior="PreviousAndNext" ShowsPreview="False" Cursor="SizeWE">
+                        <GridSplitter.Template>
+                            <ControlTemplate TargetType="GridSplitter">
+                                <Border Background="Transparent">
+                                    <Border x:Name="SplitterLine" Width="1" HorizontalAlignment="Center"
+                                            Background="{DynamicResource BorderTertiaryBrush}" />
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="SplitterLine" Property="Width" Value="3" />
+                                        <Setter TargetName="SplitterLine" Property="Background" Value="{DynamicResource TextInfoBrush}" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </GridSplitter.Template>
+                    </GridSplitter>
+
+                    <Border Grid.Column="2" Background="{DynamicResource BackgroundPrimaryBrush}">
+                        <wv2:WebView2 x:Name="PreviewView" />
+                    </Border>
+                </Grid>
+
+                <Grid x:Name="DropOverlay" Visibility="Collapsed" Background="{DynamicResource BackgroundInfoBrush}" Opacity="0.95">
+                    <Rectangle Stroke="{DynamicResource BorderInfoBrush}" StrokeThickness="2" StrokeDashArray="6,4"
+                               RadiusX="12" RadiusY="12" Margin="14" />
+                    <TextBlock Text="Déposez le fichier .md ou .txt ici" FontSize="14" FontWeight="Medium"
+                               Foreground="{DynamicResource TextInfoBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Grid>
+            </Grid>
+
+            <!-- ============ Footer ============ -->
+            <Grid Grid.Row="8" Background="{DynamicResource BackgroundSecondaryBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <CheckBox Grid.Column="0" Content="Synchroniser le défilement" Margin="12,8" Style="{StaticResource FooterCheckBoxStyle}"
+                          IsChecked="{Binding Settings.SyncScroll, Mode=TwoWay}" Checked="SyncOption_Changed" Unchecked="SyncOption_Changed" />
+                <CheckBox Grid.Column="1" Content="Synchroniser la sélection" Margin="0,8" Style="{StaticResource FooterCheckBoxStyle}"
+                          IsChecked="{Binding Settings.SyncSelection, Mode=TwoWay}" Checked="SyncOption_Changed" Unchecked="SyncOption_Changed" />
+                <CheckBox Grid.Column="2" Content="Retour à la ligne automatique" Margin="0,8" Style="{StaticResource FooterCheckBoxStyle}"
+                          IsChecked="{Binding Settings.WordWrap, Mode=TwoWay}" Checked="WordWrap_Changed" Unchecked="WordWrap_Changed" />
+                <TextBlock Grid.Column="4" x:Name="AutosaveIndicator" Text="Enregistré automatiquement" Margin="0,8,14,8"
+                           FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

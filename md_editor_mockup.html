@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>MD Editor - Mockup</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/iconfont/tabler-icons.min.css" />
+<style>
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f1efe8;
+    --color-background-tertiary: #e9e7df;
+    --color-background-info: #e6f1fb;
+    --color-background-danger: #fcebeb;
+    --color-text-primary: #20201d;
+    --color-text-secondary: #5f5e5a;
+    --color-text-tertiary: #888780;
+    --color-text-info: #0c447c;
+    --color-text-danger: #791f1f;
+    --color-border-tertiary: rgba(0,0,0,0.15);
+    --color-border-secondary: rgba(0,0,0,0.3);
+    --color-border-primary: rgba(0,0,0,0.4);
+    --color-border-info: #85b7eb;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --border-radius-xl: 16px;
+    --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-mono: "Cascadia Code", Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 2rem;
+    background: #d9d7cd;
+    font-family: var(--font-sans);
+    color: var(--color-text-primary);
+  }
+  button {
+    background: transparent;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 6px 10px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+  }
+  button:hover { background: var(--color-background-secondary); }
+  input[type="text"] {
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-md);
+    padding: 6px 8px;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    width: 100%;
+  }
+  input[type="checkbox"] { accent-color: var(--color-text-info); }
+  #editor-raw:focus { outline: none; }
+</style>
+</head>
+<body>
+
+<div style="background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 1rem; max-width: 900px; margin: 0 auto;">
+
+<div id="app-window" style="background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-secondary); overflow: hidden; position: relative;">
+
+<div style="display:flex; align-items:center; gap:8px; padding:8px 6px 8px 12px; background: var(--color-background-primary);">
+  <i class="ti ti-markdown" style="font-size:16px; color: var(--color-text-info);" aria-hidden="true"></i>
+  <span style="font-size:12px; color: var(--color-text-secondary);">MD Editor</span>
+  <div style="flex:1"></div>
+  <button style="display:flex; align-items:center; gap:6px; padding:4px 10px; font-size:12px; margin-right:6px;"><i class="ti ti-sun" style="font-size:14px;" aria-hidden="true"></i>Mode clair</button>
+  <button style="width:36px; height:30px; display:flex; align-items:center; justify-content:center; background:transparent; border:none;" aria-label="Réduire"><i class="ti ti-minus" style="font-size:14px;" aria-hidden="true"></i></button>
+  <button style="width:36px; height:30px; display:flex; align-items:center; justify-content:center; background:transparent; border:none;" aria-label="Agrandir"><i class="ti ti-square" style="font-size:12px;" aria-hidden="true"></i></button>
+  <button style="width:36px; height:30px; display:flex; align-items:center; justify-content:center; background: var(--color-background-danger); border:none; border-radius:0;" aria-label="Fermer"><i class="ti ti-x" style="font-size:14px; color: var(--color-text-danger);" aria-hidden="true"></i></button>
+</div>
+
+<div style="display:flex; align-items:center; gap:18px; padding:6px 12px; border-top:0.5px solid var(--color-border-tertiary); border-bottom:0.5px solid var(--color-border-tertiary); font-size:13px; position:relative;">
+  <span style="padding:4px 6px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); font-weight:500;">Fichier</span>
+  <span style="padding:4px 6px; color: var(--color-text-secondary);">Edition</span>
+  <span style="padding:4px 6px; color: var(--color-text-secondary);">Recherche</span>
+  <span style="padding:4px 6px; color: var(--color-text-secondary);">?</span>
+
+  <div style="position:absolute; top:32px; left:8px; width:260px; background: var(--color-background-primary); border:0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-lg); padding:4px; z-index:5; font-size:13px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+    <div style="display:flex; justify-content:space-between; padding:6px 10px; border-radius: var(--border-radius-md);"><span><i class="ti ti-file-plus" style="font-size:14px; margin-right:8px;" aria-hidden="true"></i>Nouveau</span><span style="color: var(--color-text-tertiary); font-size:12px;">Ctrl+N</span></div>
+    <div style="display:flex; justify-content:space-between; padding:6px 10px; border-radius: var(--border-radius-md);"><span><i class="ti ti-folder-open" style="font-size:14px; margin-right:8px;" aria-hidden="true"></i>Ouvrir</span><span style="color: var(--color-text-tertiary); font-size:12px;">Ctrl+O</span></div>
+    <div style="display:flex; justify-content:space-between; padding:6px 10px; border-radius: var(--border-radius-md);"><span><i class="ti ti-device-floppy" style="font-size:14px; margin-right:8px;" aria-hidden="true"></i>Sauvegarder</span><span style="color: var(--color-text-tertiary); font-size:12px;">Ctrl+S</span></div>
+    <div style="display:flex; justify-content:space-between; padding:6px 10px; border-radius: var(--border-radius-md);"><span><i class="ti ti-copy" style="font-size:14px; margin-right:8px;" aria-hidden="true"></i>Sauvegarder sous...</span><span style="color: var(--color-text-tertiary); font-size:12px;">Ctrl+Shift+S</span></div>
+    <div style="height:0.5px; background: var(--color-border-tertiary); margin:4px 6px;"></div>
+    <div style="display:flex; justify-content:space-between; padding:6px 10px; border-radius: var(--border-radius-md);"><span><i class="ti ti-x" style="font-size:14px; margin-right:8px;" aria-hidden="true"></i>Fermer</span><span style="color: var(--color-text-tertiary); font-size:12px;">Ctrl+W</span></div>
+    <div style="padding:6px 10px; border-radius: var(--border-radius-md);"><i class="ti ti-square-x" style="font-size:14px; margin-right:8px;" aria-hidden="true"></i>Fermer tous les onglets</div>
+    <div style="padding:6px 10px; border-radius: var(--border-radius-md);"><i class="ti ti-printer" style="font-size:14px; margin-right:8px;" aria-hidden="true"></i>Imprimer</div>
+    <div style="height:0.5px; background: var(--color-border-tertiary); margin:4px 6px;"></div>
+    <div style="padding:4px 10px; font-size:11px; color: var(--color-text-tertiary);">Fichiers récents</div>
+    <div style="padding:5px 10px 5px 28px; font-size:12px; color: var(--color-text-secondary);">1. notes-projet.md</div>
+    <div style="padding:5px 10px 5px 28px; font-size:12px; color: var(--color-text-secondary);">2. readme-draft.md</div>
+    <div style="padding:5px 10px 5px 28px; font-size:12px; color: var(--color-text-tertiary);">… jusqu'à 10 fichiers</div>
+  </div>
+</div>
+
+<div id="tabs-bar" style="display:flex; align-items:center; gap:4px; padding:8px 8px; border-bottom:0.5px solid var(--color-border-tertiary); overflow-x:auto;"></div>
+
+<div style="display:flex; align-items:center; gap:4px; padding:6px 8px; border-bottom:0.5px solid var(--color-border-tertiary); flex-wrap:wrap;">
+  <button style="padding:5px 9px; font-size:12px; font-weight:500; border-radius: var(--border-radius-md);" aria-label="Titre 1">H1</button>
+  <button style="padding:5px 9px; font-size:12px; font-weight:500; border-radius: var(--border-radius-md);" aria-label="Titre 2">H2</button>
+  <button style="padding:5px 9px; font-size:12px; font-weight:500; border-radius: var(--border-radius-md);" aria-label="Titre 3">H3</button>
+  <span style="width:1px; height:18px; background:var(--color-border-tertiary); margin:0 4px;"></span>
+  <button style="padding:5px 9px; font-size:13px; font-weight:500; border-radius: var(--border-radius-md);" aria-label="Gras">B</button>
+  <button style="padding:5px 9px; font-size:13px; font-style:italic; border-radius: var(--border-radius-md);" aria-label="Italique">I</button>
+  <span style="width:1px; height:18px; background:var(--color-border-tertiary); margin:0 4px;"></span>
+  <button style="padding:5px 9px; border-radius: var(--border-radius-md);" aria-label="Liste à puces"><i class="ti ti-list" style="font-size:14px;" aria-hidden="true"></i></button>
+  <button style="padding:5px 9px; border-radius: var(--border-radius-md);" aria-label="Liste numérotée"><i class="ti ti-list-numbers" style="font-size:14px;" aria-hidden="true"></i></button>
+  <button style="padding:5px 9px; border-radius: var(--border-radius-md);" aria-label="Lien"><i class="ti ti-link" style="font-size:14px;" aria-hidden="true"></i></button>
+  <button style="padding:5px 9px; border-radius: var(--border-radius-md);" aria-label="Image"><i class="ti ti-photo" style="font-size:14px;" aria-hidden="true"></i></button>
+  <button style="padding:5px 9px; border-radius: var(--border-radius-md);" aria-label="Bloc de code"><i class="ti ti-code" style="font-size:14px;" aria-hidden="true"></i></button>
+  <button style="padding:5px 9px; border-radius: var(--border-radius-md);" aria-label="Citation"><i class="ti ti-quote" style="font-size:14px;" aria-hidden="true"></i></button>
+  <button style="padding:5px 9px; border-radius: var(--border-radius-md);" aria-label="Tableau"><i class="ti ti-table" style="font-size:14px;" aria-hidden="true"></i></button>
+</div>
+
+<div id="drop-error" style="display:none; align-items:center; gap:8px; margin:10px 12px 0; padding:8px 12px; background: var(--color-background-danger); color: var(--color-text-danger); border-radius: var(--border-radius-md); font-size:13px;">
+  <i class="ti ti-alert-triangle" style="font-size:15px;" aria-hidden="true"></i>
+  <span>Formats supportés : .txt et .MD</span>
+</div>
+
+<div id="editor-panes" style="display:grid; grid-template-columns: 1fr 1fr; position:relative;">
+  <div style="padding:14px; border-right:0.5px solid var(--color-border-tertiary); background: var(--color-background-primary); height:248px;">
+    <textarea id="editor-raw" spellcheck="false" style="width:100%; height:100%; border:none; resize:none; background:transparent; font-family: var(--font-mono); font-size:13px; line-height:1.7; color: var(--color-text-primary);"></textarea>
+  </div>
+  <div style="padding:14px; background: var(--color-background-primary); height:248px; overflow:auto;">
+    <div id="editor-rendered" style="font-size:14px; line-height:1.7; color: var(--color-text-primary);"></div>
+  </div>
+
+  <div id="drop-overlay" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; background: var(--color-background-info); opacity:0.95; border:2px dashed var(--color-border-info); z-index:10;">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; font-size:14px; color: var(--color-text-info); font-weight:500;">
+      <i class="ti ti-file-upload" style="font-size:28px;" aria-hidden="true"></i>
+      <span>Déposez le fichier .md ou .txt ici</span>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex; align-items:center; gap:16px; padding:8px 12px; border-top:0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); font-size:12px; color: var(--color-text-secondary); flex-wrap:wrap;">
+  <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" checked style="width:14px; height:14px;" />Synchroniser le défilement</label>
+  <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" checked style="width:14px; height:14px;" />Synchroniser la sélection</label>
+  <div style="flex:1"></div>
+  <span style="display:flex; align-items:center; gap:4px;"><i class="ti ti-device-floppy" style="font-size:13px;" aria-hidden="true"></i>Enregistré automatiquement</span>
+</div>
+
+</div>
+
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:14px;">
+
+<div style="background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding:12px;">
+  <p style="font-size:13px; font-weight:500; margin:0 0 10px;"><i class="ti ti-search" style="font-size:14px; margin-right:6px;" aria-hidden="true"></i>Rechercher</p>
+  <label style="font-size:11px; color: var(--color-text-secondary);">Rechercher</label>
+  <input type="text" value="synchronisé" style="margin:2px 0 8px;" />
+  <label style="display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:10px;"><input type="checkbox" style="width:13px; height:13px;" />Respecter la casse</label>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <button style="font-size:12px; padding:5px 10px;">Rechercher (onglet actuel)</button>
+    <button style="font-size:12px; padding:5px 10px;">Rechercher (tous les onglets)</button>
+  </div>
+</div>
+
+<div style="background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding:12px;">
+  <p style="font-size:13px; font-weight:500; margin:0 0 10px;"><i class="ti ti-replace" style="font-size:14px; margin-right:6px;" aria-hidden="true"></i>Remplacer</p>
+  <label style="font-size:11px; color: var(--color-text-secondary);">Rechercher</label>
+  <input type="text" value="synchronisé" style="margin:2px 0 8px;" />
+  <label style="font-size:11px; color: var(--color-text-secondary);">Remplacer par</label>
+  <input type="text" value="synchronise" style="margin:2px 0 8px;" />
+  <label style="display:flex; align-items:center; gap:6px; font-size:12px; margin-bottom:10px;"><input type="checkbox" style="width:13px; height:13px;" />Respecter la casse</label>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <button style="font-size:12px; padding:5px 10px;">Remplacer (onglet actuel)</button>
+    <button style="font-size:12px; padding:5px 10px;">Remplacer (tous les onglets)</button>
+  </div>
+</div>
+
+<div style="grid-column: 1 / -1; background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding:12px; display:flex; flex-direction:column;">
+  <p style="font-size:13px; font-weight:500; margin:0 0 10px;"><i class="ti ti-info-circle" style="font-size:14px; margin-right:6px;" aria-hidden="true"></i>A propos de MD Editor</p>
+  <p style="font-size:12px; color: var(--color-text-secondary); margin:0 0 8px;">Version 1.0</p>
+  <p style="font-size:11px; line-height:1.5; color: var(--color-text-tertiary); margin:0 0 8px; max-height:78px; overflow:hidden;">Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier selon les termes de la GNU General Public License publiée par la Free Software Foundation...</p>
+  <div style="flex:1"></div>
+  <div style="display:flex; align-items:center; justify-content:space-between; padding-top:8px; border-top:0.5px solid var(--color-border-tertiary);">
+    <span style="font-size:11px; color: var(--color-text-tertiary);">Zakaria HADJ, 2026</span>
+    <button style="font-size:12px; padding:5px 10px;">Fermer</button>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div id="context-menu" style="display:none; position:fixed; min-width:170px; background: var(--color-background-primary); border:0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-lg); padding:4px; z-index:50; font-size:13px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+
+<script>
+(function () {
+  var tabs = [
+    { id: 'tab-1', name: 'notes-projet.md', content: "# Notes de projet\n\n## Objectifs\n\nLe **rendu** doit rester *synchronisé*.\n\n- Onglets multi-fichiers\n- Auto-save dans %TEMP%" },
+    { id: 'tab-2', name: 'readme-draft.md', content: "# Readme draft\n\nContenu à compléter." }
+  ];
+  var activeTabId = tabs[0].id;
+
+  var tabsBar = document.getElementById('tabs-bar');
+  var rawEditor = document.getElementById('editor-raw');
+  var renderedView = document.getElementById('editor-rendered');
+  var errorBanner = document.getElementById('drop-error');
+  var dropOverlay = document.getElementById('drop-overlay');
+  var errorTimeout = null;
+  var contextMenu = document.getElementById('context-menu');
+  var contextTarget = null;
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function inline(text) {
+    text = escapeHtml(text);
+    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/(^|[^*])\*(?!\*)(.+?)\*(?!\*)/g, '$1<em>$2</em>');
+    return text;
+  }
+
+  function markdownToHtml(md) {
+    var lines = md.replace(/\r\n/g, '\n').split('\n');
+    var html = '';
+    var inList = false;
+    lines.forEach(function (line) {
+      var listMatch = line.match(/^[-*]\s+(.*)/);
+      if (listMatch) {
+        if (!inList) { html += '<ul style="margin:0; padding-left:20px;">'; inList = true; }
+        html += '<li>' + inline(listMatch[1]) + '</li>';
+        return;
+      }
+      if (inList) { html += '</ul>'; inList = false; }
+      if (/^###\s+/.test(line)) { html += '<h3 style="font-size:14px; font-weight:500; margin:10px 0 6px;">' + inline(line.replace(/^###\s+/, '')) + '</h3>'; }
+      else if (/^##\s+/.test(line)) { html += '<h2 style="font-size:16px; font-weight:500; margin:10px 0 8px;">' + inline(line.replace(/^##\s+/, '')) + '</h2>'; }
+      else if (/^#\s+/.test(line)) { html += '<h1 style="font-size:20px; font-weight:500; margin:0 0 10px;">' + inline(line.replace(/^#\s+/, '')) + '</h1>'; }
+      else if (line.trim() === '') { /* séparateur de paragraphe */ }
+      else { html += '<p style="margin:0 0 10px;">' + inline(line) + '</p>'; }
+    });
+    if (inList) { html += '</ul>'; }
+    return html;
+  }
+
+  function renderTabsBar() {
+    tabsBar.innerHTML = '';
+    tabs.forEach(function (tab) {
+      var isActive = tab.id === activeTabId;
+      var el = document.createElement('div');
+      el.style.cssText = 'display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius: var(--border-radius-lg); font-size:13px; cursor:pointer; white-space:nowrap;' +
+        (isActive ? 'background: var(--color-background-info); color: var(--color-text-info); font-weight:500;' : 'background: var(--color-background-secondary); color: var(--color-text-secondary);');
+      var nameSpan = document.createElement('span');
+      nameSpan.textContent = tab.name;
+      el.innerHTML = '<i class="ti ti-file-text" style="font-size:14px;" aria-hidden="true"></i>';
+      el.appendChild(nameSpan);
+      var closeIcon = document.createElement('i');
+      closeIcon.className = 'ti ti-x';
+      closeIcon.style.cssText = 'font-size:13px; margin-left:4px;';
+      closeIcon.setAttribute('aria-hidden', 'true');
+      el.appendChild(closeIcon);
+      el.addEventListener('click', function () { setActiveTab(tab.id); });
+      tabsBar.appendChild(el);
+    });
+    var addBtn = document.createElement('button');
+    addBtn.style.cssText = 'padding:5px 9px; font-size:13px; margin-left:2px; border-radius: var(--border-radius-lg);';
+    addBtn.setAttribute('aria-label', 'Nouvel onglet');
+    addBtn.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i>';
+    addBtn.addEventListener('click', function () { addTab('sans-titre.md', ''); });
+    tabsBar.appendChild(addBtn);
+  }
+
+  function renderEditor() {
+    var tab = tabs.find(function (t) { return t.id === activeTabId; });
+    if (!tab) return;
+    rawEditor.value = tab.content;
+    renderedView.innerHTML = markdownToHtml(tab.content);
+  }
+
+  function setActiveTab(id) {
+    activeTabId = id;
+    renderTabsBar();
+    renderEditor();
+  }
+
+  function addTab(name, content) {
+    var id = 'tab-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    tabs.push({ id: id, name: name, content: content });
+    setActiveTab(id);
+    return id;
+  }
+
+  rawEditor.addEventListener('input', function () {
+    var tab = tabs.find(function (t) { return t.id === activeTabId; });
+    if (!tab) return;
+    tab.content = rawEditor.value;
+    renderedView.innerHTML = markdownToHtml(tab.content);
+  });
+
+  function showFormatError() {
+    errorBanner.style.display = 'flex';
+    clearTimeout(errorTimeout);
+    errorTimeout = setTimeout(function () { errorBanner.style.display = 'none'; }, 4000);
+  }
+
+  function handleFile(file) {
+    var lower = file.name.toLowerCase();
+    var isMd = lower.endsWith('.md') || lower.endsWith('.markdown');
+    var isTxt = lower.endsWith('.txt');
+    if (!isMd && !isTxt) { showFormatError(); return; }
+    var reader = new FileReader();
+    reader.onload = function (e) { addTab(file.name, e.target.result); };
+    reader.readAsText(file);
+  }
+
+  var dragCounter = 0;
+  window.addEventListener('dragenter', function (e) {
+    e.preventDefault();
+    dragCounter++;
+    dropOverlay.style.display = 'flex';
+  });
+  window.addEventListener('dragover', function (e) { e.preventDefault(); });
+  window.addEventListener('dragleave', function () {
+    dragCounter--;
+    if (dragCounter <= 0) { dragCounter = 0; dropOverlay.style.display = 'none'; }
+  });
+  window.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dragCounter = 0;
+    dropOverlay.style.display = 'none';
+    var files = e.dataTransfer.files;
+    for (var i = 0; i < files.length; i++) { handleFile(files[i]); }
+  });
+
+  function writeClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).catch(function () { legacyCopy(text); });
+    } else {
+      legacyCopy(text);
+    }
+  }
+
+  function legacyCopy(text) {
+    var tmp = document.createElement('textarea');
+    tmp.value = text;
+    tmp.style.position = 'fixed';
+    tmp.style.opacity = '0';
+    document.body.appendChild(tmp);
+    tmp.select();
+    try { document.execCommand('copy'); } catch (err) {}
+    document.body.removeChild(tmp);
+  }
+
+  function readClipboard(callback) {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then(callback).catch(function () {
+        alert('Impossible de lire le presse-papiers. Utilisez Ctrl+V.');
+      });
+    } else {
+      alert("Le collage via le menu n'est pas pris en charge par ce navigateur. Utilisez Ctrl+V.");
+    }
+  }
+
+  function cutRaw() {
+    var start = rawEditor.selectionStart, end = rawEditor.selectionEnd;
+    var selected = rawEditor.value.substring(start, end);
+    rawEditor.focus();
+    if (!selected) return;
+    writeClipboard(selected);
+    rawEditor.value = rawEditor.value.slice(0, start) + rawEditor.value.slice(end);
+    rawEditor.selectionStart = rawEditor.selectionEnd = start;
+    rawEditor.dispatchEvent(new Event('input'));
+  }
+
+  function copyRaw() {
+    var start = rawEditor.selectionStart, end = rawEditor.selectionEnd;
+    var selected = rawEditor.value.substring(start, end);
+    rawEditor.focus();
+    if (selected) { writeClipboard(selected); }
+  }
+
+  function pasteRaw() {
+    readClipboard(function (text) {
+      var start = rawEditor.selectionStart, end = rawEditor.selectionEnd;
+      rawEditor.value = rawEditor.value.slice(0, start) + text + rawEditor.value.slice(end);
+      var pos = start + text.length;
+      rawEditor.focus();
+      rawEditor.selectionStart = rawEditor.selectionEnd = pos;
+      rawEditor.dispatchEvent(new Event('input'));
+    });
+  }
+
+  function selectAllRaw() {
+    rawEditor.focus();
+    rawEditor.select();
+  }
+
+  function copyRendered() {
+    var sel = window.getSelection();
+    var text = sel ? sel.toString() : '';
+    if (text) { writeClipboard(text); }
+  }
+
+  function pasteRendered() {
+    readClipboard(function (text) {
+      var sep = rawEditor.value && !/\n$/.test(rawEditor.value) ? '\n' : '';
+      rawEditor.value = rawEditor.value + sep + text;
+      rawEditor.dispatchEvent(new Event('input'));
+    });
+  }
+
+  function selectAllRendered() {
+    var range = document.createRange();
+    range.selectNodeContents(renderedView);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function buildMenuItem(label, icon, handler) {
+    var item = document.createElement('div');
+    item.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius: var(--border-radius-md); cursor:pointer;';
+    item.innerHTML = '<i class="ti ' + icon + '" style="font-size:14px;" aria-hidden="true"></i><span>' + label + '</span>';
+    item.addEventListener('mouseenter', function () { item.style.background = 'var(--color-background-secondary)'; });
+    item.addEventListener('mouseleave', function () { item.style.background = 'transparent'; });
+    item.addEventListener('click', function () { hideContextMenu(); handler(); });
+    return item;
+  }
+
+  function showContextMenu(x, y, target) {
+    contextTarget = target;
+    contextMenu.innerHTML = '';
+    if (target === 'raw') {
+      contextMenu.appendChild(buildMenuItem('Couper', 'ti-cut', cutRaw));
+      contextMenu.appendChild(buildMenuItem('Copier', 'ti-copy', copyRaw));
+      contextMenu.appendChild(buildMenuItem('Coller', 'ti-clipboard', pasteRaw));
+      contextMenu.appendChild(buildMenuItem('Tout sélectionner', 'ti-marquee', selectAllRaw));
+    } else {
+      contextMenu.appendChild(buildMenuItem('Copier', 'ti-copy', copyRendered));
+      contextMenu.appendChild(buildMenuItem('Coller', 'ti-clipboard', pasteRendered));
+      contextMenu.appendChild(buildMenuItem('Tout sélectionner', 'ti-marquee', selectAllRendered));
+    }
+    contextMenu.style.display = 'block';
+    var menuWidth = 180;
+    var menuHeight = target === 'raw' ? 168 : 132;
+    var posX = Math.min(x, window.innerWidth - menuWidth - 8);
+    var posY = Math.min(y, window.innerHeight - menuHeight - 8);
+    contextMenu.style.left = Math.max(8, posX) + 'px';
+    contextMenu.style.top = Math.max(8, posY) + 'px';
+  }
+
+  function hideContextMenu() {
+    contextMenu.style.display = 'none';
+    contextTarget = null;
+  }
+
+  rawEditor.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    showContextMenu(e.clientX, e.clientY, 'raw');
+  });
+
+  renderedView.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    showContextMenu(e.clientX, e.clientY, 'rendered');
+  });
+
+  document.addEventListener('click', function (e) {
+    if (contextMenu.style.display === 'block' && !contextMenu.contains(e.target)) { hideContextMenu(); }
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { hideContextMenu(); } });
+  window.addEventListener('scroll', hideContextMenu, true);
+  window.addEventListener('blur', hideContextMenu);
+
+  renderTabsBar();
+  renderEditor();
+})();
+</script>
+
+</body>
+</html>

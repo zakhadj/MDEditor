@@ -1,0 +1,46 @@
+<Window x:Class="MdEditor.Views.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="A propos de MD Editor"
+        Icon="/Resources/MD-Editor-Icon.png"
+        Width="460" Height="380" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundPrimaryBrush}"
+        FontFamily="{StaticResource SansFontFamily}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,4">
+            <Image Width="24" Height="24" Source="/Resources/MD-Editor-Icon.png" />
+            <TextBlock Text="MD Editor" FontSize="16" FontWeight="Medium" Margin="10,0,0,0" VerticalAlignment="Center"
+                       Foreground="{DynamicResource TextPrimaryBrush}" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="1" Text="Version 1.2" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,10" />
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+            <TextBlock TextWrapping="Wrap" FontSize="11.5" Foreground="{DynamicResource TextTertiaryBrush}">
+                <Run Text="Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier au titre des clauses de la Licence Publique Générale GNU, telle que publiée par la Free Software Foundation ; soit la version 3 de la Licence, ou (à votre discrétion) une version ultérieure quelconque." />
+                <LineBreak /><LineBreak />
+                <Run Text="Ce programme est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE GARANTIE ; sans même la garantie implicite de COMMERCIALISABILITÉ ou DE CONFORMITÉ À UNE UTILISATION PARTICULIÈRE. Voir la Licence Publique Générale GNU pour plus de détails." />
+                <LineBreak /><LineBreak />
+                <Run Text="Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, consultez &lt;https://www.gnu.org/licenses/&gt;." />
+            </TextBlock>
+        </ScrollViewer>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Zakaria HADJ, 2026" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}"
+                       VerticalAlignment="Center" />
+            <Button Grid.Column="1" Content="Fermer" Style="{StaticResource FlatButtonStyle}" Click="CloseButton_Click" />
+        </Grid>
+    </Grid>
+</Window>
