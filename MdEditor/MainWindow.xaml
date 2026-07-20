@@ -64,7 +64,8 @@
 
                 <Button Grid.Column="3" x:Name="ThemeToggleButton" Style="{StaticResource IconButtonStyle}"
                         Click="ThemeToggleButton_Click"
-                        WindowChrome.IsHitTestVisibleInChrome="True" ToolTip="Basculer le thème clair/sombre">
+                        WindowChrome.IsHitTestVisibleInChrome="True" ToolTip="Basculer le thème clair/sombre"
+                        AutomationProperties.Name="Basculer le thème clair/sombre">
                     <Grid Width="14" Height="14">
                         <Canvas x:Name="SunIcon" Width="14" Height="14">
                             <Ellipse Canvas.Left="4" Canvas.Top="4" Width="6" Height="6" Fill="{DynamicResource TextPrimaryBrush}" />
@@ -175,14 +176,24 @@
             <Border Grid.Row="3" Height="1" Margin="8,8,8,0" Background="{DynamicResource BorderTertiaryBrush}" />
 
             <!-- ============ Tab strip ============ -->
-            <ScrollViewer Grid.Row="4" Margin="8,8,8,0"
-                          HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal">
+            <!-- Le débordement d'onglets se gère aux chevrons (défilement animé), pas à l'ascenseur :
+                 TabScroller masque donc sa barre horizontale. Le "+" et les chevrons sont hors de la
+                 zone défilante pour rester atteignables quel que soit le nombre d'onglets. -->
+            <Grid Grid.Row="4" Margin="8,8,8,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ScrollViewer x:Name="TabScroller" Grid.Column="0"
+                              HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled"
+                              ScrollChanged="TabScroller_ScrollChanged">
                     <ListBox x:Name="TabStrip" Style="{StaticResource TabStripStyle}"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                               ItemContainerStyle="{StaticResource TabStripItemStyle}"
-                              ItemsSource="{Binding Tabs}" SelectedItem="{Binding ActiveTab}">
+                              ItemsSource="{Binding Tabs}" SelectedItem="{Binding ActiveTab}"
+                              RequestBringIntoView="TabStrip_RequestBringIntoView">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:DocumentTabViewModel}">
                                 <StackPanel Orientation="Horizontal">
@@ -201,15 +212,36 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+                </ScrollViewer>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Contenu purement graphique : sans AutomationProperties.Name ces boutons n'ont aucun
+                         nom accessible (et sont introuvables pour un lecteur d'ecran comme pour les tests UIA). -->
                     <Button Style="{StaticResource IconButtonStyle}" Width="32" Click="NewTabButton_Click"
-                            ToolTip="Nouvel onglet" VerticalAlignment="Center">
+                            ToolTip="Nouvel onglet" AutomationProperties.Name="Nouvel onglet">
                         <Grid Width="11" Height="11">
                             <Line X1="5.5" Y1="0" X2="5.5" Y2="11" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4" />
                             <Line X1="0" Y1="5.5" X2="11" Y2="5.5" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4" />
                         </Grid>
                     </Button>
+                    <Button x:Name="TabScrollLeftButton" Style="{StaticResource IconButtonStyle}" Width="28"
+                            Visibility="Collapsed" Click="TabScrollLeft_Click" ToolTip="Onglets précédents"
+                            AutomationProperties.Name="Onglets précédents">
+                        <Grid Width="10" Height="12">
+                            <Line X1="6.5" Y1="1" X2="2" Y2="6" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4" />
+                            <Line X1="2" Y1="6" X2="6.5" Y2="11" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4" />
+                        </Grid>
+                    </Button>
+                    <Button x:Name="TabScrollRightButton" Style="{StaticResource IconButtonStyle}" Width="28"
+                            Visibility="Collapsed" Click="TabScrollRight_Click" ToolTip="Onglets suivants"
+                            AutomationProperties.Name="Onglets suivants">
+                        <Grid Width="10" Height="12">
+                            <Line X1="3.5" Y1="1" X2="8" Y2="6" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4" />
+                            <Line X1="8" Y1="6" X2="3.5" Y2="11" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.4" />
+                        </Grid>
+                    </Button>
                 </StackPanel>
-            </ScrollViewer>
+            </Grid>
 
             <!-- ============ Tab/editor separator ============ -->
             <Border Grid.Row="5" Height="1" Margin="8,8,8,0" Background="{DynamicResource BorderTertiaryBrush}" />
@@ -230,8 +262,11 @@
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Background="{DynamicResource BackgroundPrimaryBrush}">
+                        <!-- Police et corps volontairement identiques a ceux du corps de l'apercu, dont le CSS
+                             est ecrit en dur dans MarkdownRenderService.ShellTemplate ("Segoe UI", 14px) :
+                             modifier l'un sans l'autre desynchronise visuellement les deux panneaux. -->
                         <ae:TextEditor x:Name="RawEditor" Document="{Binding ActiveTab.Document}"
-                                       FontFamily="{StaticResource MonoFontFamily}" FontSize="13"
+                                       FontFamily="{StaticResource SansFontFamily}" FontSize="14"
                                        Background="Transparent" Foreground="{DynamicResource TextPrimaryBrush}"
                                        Padding="14" ShowLineNumbers="False"
                                        GotFocus="RawEditor_GotFocus" LostFocus="RawEditor_LostFocus">

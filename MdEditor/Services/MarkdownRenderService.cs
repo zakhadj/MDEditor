@@ -140,8 +140,29 @@ __BASE_TAG__
 <div id="content">__INITIAL_BODY__</div>
 <script>
 (function () {
-  var suppressScroll = false;
+  // Suppression des remontees 'scroll' pendant un defilement declenche par l'hote.
+  // Un drapeau a un coup ne suffit pas (un seul defilement emet des dizaines d'evenements), et une
+  // simple fenetre fixe non plus : un scrollToRatio arrivant pendant un scrollIntoView 'smooth' la
+  // raccourcirait, laissant la fin du defilement lisse reboucler vers l'editeur.
+  // D'ou deux bornes : une limite dure, et une limite glissante reconduite tant que des evenements
+  // arrivent - la suppression s'arrete donc quand le defilement s'est reellement stabilise.
+  var suppressHardUntil = 0;
+  var suppressSettleUntil = 0;
+  var SETTLE_MS = 150;
   var scrollScheduled = false;
+
+  function suppressScrollReports(maxMs) {
+    var now = performance.now();
+    suppressHardUntil = Math.max(suppressHardUntil, now + maxMs);
+    suppressSettleUntil = Math.max(suppressSettleUntil, now + SETTLE_MS);
+  }
+
+  function scrollReportSuppressed() {
+    var now = performance.now();
+    if (now >= suppressHardUntil || now >= suppressSettleUntil) { return false; }
+    suppressSettleUntil = now + SETTLE_MS;   // le defilement programmatique est toujours en cours
+    return true;
+  }
 
   function postToHost(obj) {
     if (window.chrome && window.chrome.webview) { window.chrome.webview.postMessage(obj); }
@@ -153,7 +174,7 @@ __BASE_TAG__
 
   function scrollToRatio(ratio) {
     var max = document.documentElement.scrollHeight - window.innerHeight;
-    suppressScroll = true;
+    suppressScrollReports(400);
     window.scrollTo(0, Math.max(0, max) * ratio);
   }
 
@@ -179,7 +200,14 @@ __BASE_TAG__
         if (!first) { first = b; }
       }
     }
-    if (first) { first.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+    if (first) {
+      // Le surlignage suit une selection faite dans l'editeur : l'apercu peut se repositionner si le
+      // bloc est hors ecran, mais ce defilement ne doit surtout pas etre renvoye a l'hote, sinon la
+      // zone d'edition se met a sauter sous le curseur. Marge large : le smooth dure plusieurs centaines
+      // de millisecondes.
+      suppressScrollReports(1500);
+      first.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
   }
 
   function getSelectionText() { return window.getSelection().toString(); }
@@ -203,11 +231,12 @@ __BASE_TAG__
   };
 
   window.addEventListener('scroll', function () {
-    if (suppressScroll) { suppressScroll = false; return; }
+    if (scrollReportSuppressed()) { return; }
     if (scrollScheduled) { return; }
     scrollScheduled = true;
     requestAnimationFrame(function () {
       scrollScheduled = false;
+      if (scrollReportSuppressed()) { return; }
       var max = document.documentElement.scrollHeight - window.innerHeight;
       var ratio = max > 0 ? window.scrollY / max : 0;
       postToHost({ type: 'scroll', ratio: ratio });

@@ -13,6 +13,7 @@ using System.Windows.Interop;
 using System.Windows.Shell;
 using System.Windows.Threading;
 using Microsoft.Web.WebView2.Core;
+using MdEditor.Controls;
 using MdEditor.Services;
 using MdEditor.ViewModels;
 using MdEditor.Views;
@@ -27,11 +28,22 @@ public partial class MainWindow : Window
     // Using .invalid TLD guarantees no collision with any real domain.
     private const string VirtualHostName = "mdeditor-local.invalid";
 
+    // Durée pendant laquelle un défilement de l'éditeur déclenché par l'hôte (sync entrante, restauration,
+    // résultat de recherche) n'est PAS renvoyé vers l'aperçu. Une fenêtre temporelle, et non un drapeau
+    // à un coup : un seul ScrollToVerticalOffset produit plusieurs ScrollOffsetChanged, dont les suivants
+    // repartaient boucler vers l'aperçu.
+    private const int IncomingScrollGuardMs = 250;
+
+    private const double TabScrollEpsilon = 1.5;
+
+    private static readonly TimeSpan TabScrollAnimationDuration = TimeSpan.FromMilliseconds(220);
+
     public MainViewModel Vm { get; }
 
     private DocumentTabViewModel? _subscribedTab;
     private bool _previewReady;
-    private bool _suppressEditorScrollSync;
+    private long _ignoreEditorScrollUntilTicks;
+    private bool _scrollPushScheduled;
     private string? _currentVirtualHostFolder;
     private DispatcherTimer? _errorBannerTimer;
     private FindReplaceWindow? _findReplaceWindow;
@@ -47,6 +59,7 @@ public partial class MainWindow : Window
         Vm.PropertyChanged += Vm_PropertyChanged;
         RawEditor.TextArea.SelectionChanged += RawEditor_SelectionChanged;
         RawEditor.TextArea.TextView.ScrollOffsetChanged += RawEditor_ScrollOffsetChanged;
+        RawEditor.PreviewMouseWheel += RawEditor_PreviewMouseWheel;
 
         SubscribeToActiveTab(Vm.ActiveTab);
         UpdateThemeToggleVisual();
@@ -182,6 +195,10 @@ public partial class MainWindow : Window
         _previewReady = true;
         NavigatePreviewForActiveTab();
         UpdateMaximizeGlyph();
+
+        // Les onglets restaurés (ou passés en ligne de commande) sont créés avant la fenêtre : leur
+        // sélection n'a déclenché aucun PropertyChanged ici, l'onglet actif peut donc être hors écran.
+        BringActiveTabIntoView();
     }
 
     // ===================== Active tab <-> shared editor/preview =====================
@@ -191,9 +208,23 @@ public partial class MainWindow : Window
         if (e.PropertyName == nameof(MainViewModel.ActiveTab))
         {
             SubscribeToActiveTab(Vm.ActiveTab);
-            RawEditor.ScrollToVerticalOffset(Vm.ActiveTab?.SavedRawScrollOffset ?? 0);
+            ScrollEditorProgrammatically(() => RawEditor.ScrollToVerticalOffset(Vm.ActiveTab?.SavedRawScrollOffset ?? 0));
             NavigatePreviewForActiveTab();
+            BringActiveTabIntoView();
         }
+    }
+
+    /// <summary>
+    /// Exécute un défilement de l'éditeur décidé par l'hôte : coupe le suivi de molette en cours
+    /// (sinon il ramènerait l'éditeur sur son ancienne cible) et ouvre la fenêtre pendant laquelle les
+    /// ScrollOffsetChanged qui en découlent ne repartent pas vers l'aperçu.
+    /// </summary>
+    private void ScrollEditorProgrammatically(Action scroll)
+    {
+        SmoothScroll.CancelVertical(RawEditor);
+        _ignoreEditorScrollUntilTicks =
+            Math.Max(_ignoreEditorScrollUntilTicks, Environment.TickCount64 + IncomingScrollGuardMs);
+        scroll();
     }
 
     private void SubscribeToActiveTab(DocumentTabViewModel? tab)
@@ -290,6 +321,90 @@ public partial class MainWindow : Window
 
         var ratio = tab.SavedPreviewScrollRatio.ToString(CultureInfo.InvariantCulture);
         _ = PreviewView.CoreWebView2.ExecuteScriptAsync($"window.__md && window.__md.scrollToRatio({ratio})");
+    }
+
+    // ===================== Tab strip overflow (chevrons) =====================
+
+    private void TabScroller_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        // ScrollChanged couvre aussi les variations d'extent et de viewport : ajout/fermeture d'onglet,
+        // renommage après SaveAs, redimensionnement de la fenêtre. Pas d'autre point d'accroche à prévoir.
+        var scrollable = TabScroller.ScrollableWidth;
+        var overflowing = scrollable > TabScrollEpsilon;
+
+        var visibility = overflowing ? Visibility.Visible : Visibility.Collapsed;
+        TabScrollLeftButton.Visibility = visibility;
+        TabScrollRightButton.Visibility = visibility;
+
+        // Tolérance de quelques dixièmes de pixel : un reliquat sub-pixel après un défilement animé
+        // n'est pas du contenu à révéler, et laisserait sinon un chevron actif sans effet visible.
+        TabScrollLeftButton.IsEnabled = overflowing && TabScroller.HorizontalOffset > TabScrollEpsilon;
+        TabScrollRightButton.IsEnabled = overflowing && TabScroller.HorizontalOffset < scrollable - TabScrollEpsilon;
+    }
+
+    private void TabScrollLeft_Click(object sender, RoutedEventArgs e) => ScrollTabsBy(-1);
+
+    private void TabScrollRight_Click(object sender, RoutedEventArgs e) => ScrollTabsBy(1);
+
+    private void ScrollTabsBy(int direction)
+    {
+        var step = TabScroller.ViewportWidth * 0.75;
+        var target = Math.Clamp(TabScroller.HorizontalOffset + direction * step, 0, TabScroller.ScrollableWidth);
+        SmoothScroll.AnimateHorizontal(TabScroller, target, TabScrollAnimationDuration);
+    }
+
+    /// <summary>
+    /// Le ScrollViewer répond à la sélection d'un onglet par un saut instantané. On l'annule ici pour
+    /// le remplacer par le même défilement animé que les chevrons.
+    /// </summary>
+    private void TabStrip_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Au moment où ActiveTab change, ni le conteneur d'un onglet fraîchement ajouté ni l'extent du
+    /// ScrollViewer ne sont à jour : on repasse une fois le layout terminé (priorité Loaded, donc
+    /// après le Render qui réalise les conteneurs et recalcule ScrollableWidth).
+    /// </summary>
+    private void BringActiveTabIntoView() =>
+        Dispatcher.BeginInvoke(BringActiveTabIntoViewCore, DispatcherPriority.Loaded);
+
+    private void BringActiveTabIntoViewCore()
+    {
+        var tab = Vm.ActiveTab;
+        if (tab == null || TabScroller.ScrollableWidth <= TabScrollEpsilon)
+        {
+            return; // Aucun onglet actif, ou tous tiennent dans la largeur disponible.
+        }
+
+        if (TabStrip.ItemContainerGenerator.ContainerFromItem(tab) is not FrameworkElement container
+            || !container.IsVisible)
+        {
+            return;
+        }
+
+        var left = container.TransformToAncestor(TabScroller).Transform(new Point(0, 0)).X + TabScroller.HorizontalOffset;
+        // ActualWidth exclut la marge inter-onglets : sans elle, révéler le dernier onglet s'arrête
+        // quelques pixels avant la fin et laisse le chevron droit actif alors qu'il n'y a plus rien.
+        var right = left + container.ActualWidth + container.Margin.Right;
+
+        double target;
+        if (left < TabScroller.HorizontalOffset)
+        {
+            target = left;
+        }
+        else if (right > TabScroller.HorizontalOffset + TabScroller.ViewportWidth)
+        {
+            target = right - TabScroller.ViewportWidth;
+        }
+        else
+        {
+            return; // Déjà entièrement visible.
+        }
+
+        SmoothScroll.AnimateHorizontal(TabScroller, Math.Clamp(target, 0, TabScroller.ScrollableWidth),
+            TabScrollAnimationDuration);
     }
 
     // ===================== Window chrome =====================
@@ -841,13 +956,57 @@ public partial class MainWindow : Window
 
     // ===================== Scroll / selection sync =====================
 
-    private void RawEditor_ScrollOffsetChanged(object? sender, EventArgs e)
+    /// <summary>
+    /// AvalonEdit défile à la molette par sauts de lignes entiers. On remplace ce comportement par un
+    /// suivi continu vers une cible cumulée, pour un rendu comparable à celui de l'aperçu.
+    /// </summary>
+    private void RawEditor_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (_suppressEditorScrollSync)
+        var max = Math.Max(0, RawEditor.ExtentHeight - RawEditor.ViewportHeight);
+        if (max <= 0)
         {
-            _suppressEditorScrollSync = false;
             return;
         }
+
+        e.Handled = true;
+
+        var lineHeight = RawEditor.TextArea.TextView.DefaultLineHeight;
+        var step = e.Delta / 120.0 * SystemParameters.WheelScrollLines * lineHeight;
+
+        // Repartir de la cible en attente, pas de l'offset courant : sans cela, des coups de molette
+        // rapprochés se tronqueraient les uns les autres au lieu de s'additionner.
+        var target = Math.Clamp(SmoothScroll.PendingVerticalTarget(RawEditor) - step, 0, max);
+        SmoothScroll.ScrollVerticalTo(RawEditor, target);
+    }
+
+    private void RawEditor_ScrollOffsetChanged(object? sender, EventArgs e)
+    {
+        // Toujours mémorisé, y compris pendant un défilement piloté par l'hôte : c'est ce qui est
+        // restauré au retour sur l'onglet.
+        if (Vm.ActiveTab != null)
+        {
+            Vm.ActiveTab.SavedRawScrollOffset = RawEditor.VerticalOffset;
+        }
+
+        if (Environment.TickCount64 < _ignoreEditorScrollUntilTicks)
+        {
+            return; // Défilement provoqué par l'aperçu : ne pas le lui renvoyer.
+        }
+
+        if (!Vm.Settings.SyncScroll || !_previewReady || PreviewView.CoreWebView2 == null || _scrollPushScheduled)
+        {
+            return;
+        }
+
+        // Le défilement animé génère un événement par frame : on coalesce les envois vers l'aperçu,
+        // symétriquement au requestAnimationFrame utilisé côté JS.
+        _scrollPushScheduled = true;
+        Dispatcher.BeginInvoke(PushScrollRatioToPreview, DispatcherPriority.Render);
+    }
+
+    private void PushScrollRatioToPreview()
+    {
+        _scrollPushScheduled = false;
 
         if (!Vm.Settings.SyncScroll || !_previewReady || PreviewView.CoreWebView2 == null)
         {
@@ -856,12 +1015,6 @@ public partial class MainWindow : Window
 
         var max = RawEditor.ExtentHeight - RawEditor.ViewportHeight;
         var ratio = max > 0 ? RawEditor.VerticalOffset / max : 0;
-
-        if (Vm.ActiveTab != null)
-        {
-            Vm.ActiveTab.SavedRawScrollOffset = RawEditor.VerticalOffset;
-        }
-
         var ratioStr = ratio.ToString(CultureInfo.InvariantCulture);
         _ = PreviewView.CoreWebView2.ExecuteScriptAsync($"window.__md && window.__md.scrollToRatio({ratioStr})");
     }
@@ -922,9 +1075,8 @@ public partial class MainWindow : Window
         }
 
         var ratio = root.GetProperty("ratio").GetDouble();
-        _suppressEditorScrollSync = true;
         var max = RawEditor.ExtentHeight - RawEditor.ViewportHeight;
-        RawEditor.ScrollToVerticalOffset(ratio * Math.Max(0, max));
+        ScrollEditorProgrammatically(() => RawEditor.ScrollToVerticalOffset(ratio * Math.Max(0, max)));
     }
 
     private void HandleIncomingSelection(JsonElement root)
@@ -940,7 +1092,7 @@ public partial class MainWindow : Window
 
         RawEditor.Select(start, end - start);
         var location = RawEditor.Document.GetLocation(start);
-        RawEditor.ScrollTo(location.Line, location.Column);
+        ScrollEditorProgrammatically(() => RawEditor.ScrollTo(location.Line, location.Column));
     }
 
     private void SyncOption_Changed(object sender, RoutedEventArgs e) => Vm.PersistSettings();
@@ -990,6 +1142,6 @@ public partial class MainWindow : Window
         RawEditor.Focus();
         RawEditor.Select(start, length);
         var location = RawEditor.Document.GetLocation(start);
-        RawEditor.ScrollTo(location.Line, location.Column);
+        ScrollEditorProgrammatically(() => RawEditor.ScrollTo(location.Line, location.Column));
     }
 }

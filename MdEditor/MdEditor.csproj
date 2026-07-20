@@ -11,7 +11,7 @@
     <!-- SOURCE DE VERITE UNIQUE DE LA VERSION. L'ecran "A propos" la lit a l'execution depuis
          l'assembly, et installer\MdEditor.iss la lit a la compilation depuis le ProductVersion de
          l'exe publie : ne la dupliquer nulle part ailleurs. -->
-    <Version>1.2.1</Version>
+    <Version>1.3.0</Version>
     <!-- Sans ceci, le SDK .NET 8 suffixe InformationalVersion (donc le ProductVersion de l'exe) du
          SHA du commit : "1.2.1+ece4192...". L'installeur et l'ecran "A propos" l'afficheraient tel
          quel, et le nom du Setup deviendrait MdEditor-Setup-1.2.1+ece4192....exe. -->
