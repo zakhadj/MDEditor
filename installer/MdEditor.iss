@@ -57,7 +57,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "{#AppExeSource}"; DestDir: "{app}"; Flags: ignoreversion
-; WebView2Loader.dll est natif : il reste hors du single-file et doit accompagner l'exe.
+; Fichiers voisins restants (README.md livre comme documentation lisible). Depuis que le publish
+; framework-dependant passe -p:IncludeNativeLibrariesForSelfExtract=true, WebView2Loader.dll est
+; embarque dans l'exe et n'apparait plus ici ; la ligne reste pour tout fichier voisin futur.
 Source: "..\publish\framework-dependent\*"; DestDir: "{app}"; Excludes: "{#AppExeName},*.pdb,*.xml"; Flags: ignoreversion recursesubdirs skipifsourcedoesntexist
 
 [Icons]

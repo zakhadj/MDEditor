@@ -59,7 +59,7 @@ Bascule accessible depuis la barre de titre, mode clair actif par défaut. La pr
 
 ## Téléchargement
 
-Deux livrables sont publiés dans les [Releases](https://github.com/zakhadj/MDEditor/releases) :
+Trois livrables sont publiés dans les [Releases](https://github.com/zakhadj/MDEditor/releases) :
 
 - **Installeur** (`MdEditor-Setup-x.y.z.exe`, ~3 Mo) — recommandé. Assistant d'installation
   classique : installation par-utilisateur sans droits administrateur, raccourcis menu Démarrer,
@@ -68,6 +68,14 @@ Deux livrables sont publiés dans les [Releases](https://github.com/zakhadj/MDEd
 - **Exécutable autonome** (`MdEditor.exe`, ~70 Mo) — un seul fichier self-contained, runtime .NET
   embarqué, exécutable sans installation. Nécessite tout de même le runtime **WebView2** pour
   l'aperçu (préinstallé sur Windows 11 et les Windows 10 à jour).
+- **Exécutable léger** (`MdEditor-portable.exe`, ~4 Mo) — même chose, mais sans le runtime .NET
+  embarqué : il faut donc que le **runtime .NET 8 Desktop** soit déjà installé sur la machine
+  ([téléchargement](https://dotnet.microsoft.com/download/dotnet/8.0/runtime)), en plus de WebView2.
+  À privilégier si vous voulez un fichier unique sans installation et sans les 70 Mo.
+
+Note : les exécutables ne sont pas signés numériquement. Windows SmartScreen peut donc afficher un
+avertissement au premier lancement, et certains antivirus signalent l'installeur par heuristique
+(faux positif classique pour un installeur non signé qui télécharge les prérequis Microsoft).
 
 ## Build
 
@@ -111,12 +119,18 @@ c'est celle qu'empaquette l'installeur) :
 ```powershell
 dotnet publish MdEditor\MdEditor.csproj -c Release -r win-x64 `
   --self-contained false -p:PublishSingleFile=true `
-  -p:EnableCompressionInSingleFile=false `
+  -p:EnableCompressionInSingleFile=false -p:IncludeNativeLibrariesForSelfExtract=true `
   -o publish\framework-dependent
 ```
 
 `-p:EnableCompressionInSingleFile=false` est obligatoire en framework-dépendant : la compression
 single-file n'est valide qu'en self-contained (sinon erreur `NETSDK1176`).
+
+`IncludeNativeLibrariesForSelfExtract` est nécessaire ici pour la même raison qu'en self-contained,
+mais sur une autre bibliothèque : `WebView2Loader.dll` est native, donc sans ce flag elle reste à
+côté de l'exe (avec une copie dans `runtimes\win-x64\native\`) et l'exe lancé seul ne démarre pas.
+Avec le flag, l'exe fait ~4 Mo et fonctionne dans un dossier vide, à condition que le runtime
+.NET 8 Desktop soit installé.
 
 ### Installeur
 
